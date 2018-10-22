@@ -5,7 +5,8 @@ int rounds = 0;
 int iters = 50000;
 int roundLimit = 100000;
 int shootcooldown = 0;
-float speed = 4;
+float acceleration = 0.08;
+float max_speed = 4;
 double best = Double.MIN_VALUE;
 
 int cells = 4;
@@ -220,8 +221,13 @@ void update() {
     float y = player.y - zombies.get(i).y;
 
     if (d >= 1) {
-      zombies.get(i).x += (x / d * min(speed, d));
-      zombies.get(i).y += (y / d * min(speed, d));
+      zombies.get(i).speed_x += acceleration * (x>0 ? 1 : -1); 
+      zombies.get(i).speed_y += acceleration * (y>0 ? 1 : -1);
+      zombies.get(i).speed_x = abs(zombies.get(i).speed_x) >  max_speed ? max_speed * (x>0 ? 1 : -1): zombies.get(i).speed_x;
+      zombies.get(i).speed_y = abs(zombies.get(i).speed_y) >  max_speed ? max_speed * (y>0 ? 1 : -1): zombies.get(i).speed_y;
+
+      zombies.get(i).x += (abs(zombies.get(i).speed_x) > d) ? x : zombies.get(i).speed_x;
+      zombies.get(i).y += (abs(zombies.get(i).speed_y) > d) ? y : zombies.get(i).speed_y;
     }
   }
 
@@ -261,8 +267,8 @@ void update() {
 
   // Apply move
   float res = compute();
-  player.x += 1.5*speed*cos(res * 2*PI);
-  player.y += 1.5*speed*sin(res * 2*PI);
+  player.x += 1.5*max_speed*cos(res * 2*PI);
+  player.y += 1.5*max_speed*sin(res * 2*PI);
 
   // Check if out of bounds
   int bound = unitsize;
