@@ -5,7 +5,8 @@ int rounds = 0;
 int iters = 50000;
 int roundLimit = 100000;
 int shootcooldown = 0;
-float speed = 4;
+float max_speed = 4;
+float acceleration = 0.08;
 double best = Double.MIN_VALUE;
 
 int cells = 4;
@@ -27,7 +28,7 @@ ArrayList<Bullet> bullets = new ArrayList<Bullet>();
 Player player;
 
 boolean gameOver = false;
-boolean canShoot = true;
+boolean canShoot = false;
 boolean training = false;
 
 /////////////////////////////////////////////////////
@@ -48,6 +49,7 @@ class Zombie extends Unit {
   public Zombie(float x, float y) {
     super(x, y);
   }
+  float speed_x=0, speed_y=0;
 }
 
 class Player extends Unit {
@@ -110,7 +112,7 @@ void randomize() {
   weights2Best[2] = weights2[2];
   weights2[3] = 0.91;
   weights2Best[3] = weights2[3];
-
+  
   // Init bias
   for (int i = 0; i < bias.length; i++) {
     bias[i] = getRandom();
@@ -219,9 +221,15 @@ void update() {
     float x = player.x - zombies.get(i).x;
     float y = player.y - zombies.get(i).y;
 
-    if (d >= 1) {
-      zombies.get(i).x += (x / d * min(speed, d));
-      zombies.get(i).y += (y / d * min(speed, d));
+    if (d >= 1){
+      zombies.get(i).speed_x += acceleration * (x>0 ? 1 : -1); 
+      zombies.get(i).speed_y += acceleration * (y>0 ? 1 : -1);
+      zombies.get(i).speed_x = abs(zombies.get(i).speed_x) >  max_speed ? max_speed * (x>0 ? 1 : -1): zombies.get(i).speed_x;
+      zombies.get(i).speed_y = abs(zombies.get(i).speed_y) >  max_speed ? max_speed * (y>0 ? 1 : -1): zombies.get(i).speed_y;
+
+      zombies.get(i).x += (abs(zombies.get(i).speed_x) > d) ? x : zombies.get(i).speed_x;
+      zombies.get(i).y += (abs(zombies.get(i).speed_y) > d) ? y : zombies.get(i).speed_y;
+      
     }
   }
 
@@ -261,9 +269,8 @@ void update() {
 
   // Apply move
   float res = compute();
-  player.x += 1.5*speed*cos(res * 2*PI);
-  player.y += 1.5*speed*sin(res * 2*PI);
-
+  player.x += 1.5*max_speed*cos(res * 2*PI);
+  player.y += 1.5*max_speed*sin(res * 2*PI);
   // Check if out of bounds
   int bound = unitsize;
   if (player.x < bound) {
@@ -445,3 +452,4 @@ void draw() {
     }
   }
 }
+                                                                                                                                                           
